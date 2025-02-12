@@ -16,9 +16,19 @@ typedef enum {
 typedef struct {
     char lexeme[MAX_TOKEN_SIZE];
     TokenType type;
-} Token;
+}Token;
 
-void initializeLexer(const char* filename);
+typedef struct{
+    FILE *fptr;
+}lex_file;
+
+typedef enum 
+{
+    success,
+    failure
+}status;
+
+status initializeLexer(const char* filename,lex_file *lex);
 Token getNextToken();
 void categorizeToken(Token* token);
 int isKeyword(const char* str);
