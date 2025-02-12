@@ -4,6 +4,8 @@
 #define MAX_KEYWORDS 20
 #define MAX_TOKEN_SIZE 100
 
+typedef unsigned int uint;
+
 typedef enum {
     KEYWORD,
     OPERATOR,
@@ -20,6 +22,8 @@ typedef struct {
 
 typedef struct{
     FILE *fptr;
+    uint file_size;
+
 }lex_file;
 
 typedef enum 

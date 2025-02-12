@@ -24,6 +24,22 @@ status initializeLexer(const char* filename,lex_file *lex)
         printf("Not a valid .c file \n");
         return failure;
     }
+    // opening file 
+    lex->fptr  = fopen(filename,"r");
+    if (lex->fptr == NULL)
+    {
+        printf("Could not open the c File \n");
+        return  failure;
+    }
+    else
+    {
+        printf("Opened %s succesfully\n",filename);
+    }
 
-    // lex->fptr  = fopen()
+    // finding the size of the file 
+    fseek(lex->fptr,0,SEEK_END);
+    lex->file_size = ftell(lex->fptr);
+    printf("size of the file is %d",lex->file_size);
+    return success; 
 }
+
