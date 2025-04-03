@@ -38,7 +38,8 @@ typedef enum
 
 
 status initializeLexer(const char* filename,lex_file *lex);
-Token getNextToken();
+// Token getNextToken();
+void lexical(lex_file *lex);
 void categorizeToken(Token* token);
 int isKeyword(const char* str);
 int isOperator(const char* str);

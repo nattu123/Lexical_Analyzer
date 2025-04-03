@@ -99,6 +99,7 @@ void lexical(lex_file *lex)
 
         if((isdigit(ch)!=0 )&& count == 0)
         {
+            arr[count++] = ch;
             int flag = 0;
             while((ch = fgetc(lex->fptr)) != ';')
             {
@@ -112,10 +113,11 @@ void lexical(lex_file *lex)
                     }
                     else
                     {
-                        printf("float constant :%s\n,arr");
+                        printf("float constant :%s\n",arr);
                     }
+                    continue;
                 }
-
+                
                 if(ch == '.')flag++; 
                 arr[count++] = ch;
             }
@@ -125,7 +127,11 @@ void lexical(lex_file *lex)
             {
                 printf("Integer constant : %s\n",arr);
             }
+            else
+            {
+                printf("float constant :%s\n",arr);
+            }
         }
-        if(isalpha)
+        // if(isalpha)
     }
 }
