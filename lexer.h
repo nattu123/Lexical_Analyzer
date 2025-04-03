@@ -12,25 +12,30 @@ typedef enum {
     SPECIAL_CHARACTER,
     CONSTANT,
     IDENTIFIER,
+    Preprocessor_directive,
     UNKNOWN
 } TokenType;
+
 
 typedef struct {
     char lexeme[MAX_TOKEN_SIZE];
     TokenType type;
 }Token;
 
+
 typedef struct{
     FILE *fptr;
     uint file_size;
 
 }lex_file;
+    
 
 typedef enum 
 {
     success,
     failure
 }status;
+
 
 status initializeLexer(const char* filename,lex_file *lex);
 Token getNextToken();
