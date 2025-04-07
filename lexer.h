@@ -1,8 +1,8 @@
 #ifndef LEXER_H
 #define LEXER_H
-
 #define MAX_KEYWORDS 20
 #define MAX_TOKEN_SIZE 100
+#define MAX_OPERATORS 30 
 
 typedef unsigned int uint;
 
@@ -23,6 +23,7 @@ typedef struct {
 }Token;
 
 
+
 typedef struct{
     FILE *fptr;
     uint file_size;
@@ -33,7 +34,8 @@ typedef struct{
 typedef enum 
 {
     success,
-    failure
+    failure,
+    error
 }status;
 
 

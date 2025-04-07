@@ -13,7 +13,15 @@ static const char* keywords[MAX_KEYWORDS] = {
     "char", "double", "void", "switch", "case", "default", "const", "static", "sizeof", "struct"
 };
 
-static const char* operators = "+-*/%=!<>|&";
+const char *operators[] = {
+
+    ">>=", "<<=",
+
+    "++", "--", "==", "!=", "<=", ">=", "+=", "-=", "*=", "/=", "%=","&&", "||", ">>", "<<",
+
+    "=", "+", "-", "*", "/", "%", "<", ">", "&", "|", "!", "^", "~"
+};
+
 static const char* specialCharacters = ",;{}()[]";
 
 
@@ -50,53 +58,92 @@ status initializeLexer(const char* filename,lex_file *lex)
 }
 
 
-// Token getNextToken(lex_file *lex)
-// {
-//     int i = 0;
-//     char arr[100];
-//     Token next_char;
-//     char ch = fgetc(lex->fptr);
 
-//     // detect preprocessor directives 
-    
-//     if(ch == '#')
-//     {
-//         fscanf(lex->fptr,"%[^\n]",arr+1);
-//         printf("preprocessor directive detected \n");
-//         arr[0] = ch;
-//         strcpy(next_char.lexeme,arr);
-//         next_char.type = KEYWORD;
-//         return next_char;
-//     }
-    
-//     while(strchr(specialCharacters,ch) == NULL &&  strchr(operators,ch) == NULL)
-//     {
-//         if(ch == '\n') break;
-//         arr[i] = ch;
-//         ch =fgetc(lex->fptr);
-//         i++;
-//     }
+status check_if_keyword(char *arr)
+{
+    for(int i =0;i<MAX_KEYWORDS;i++)
+    {
+      if(strcmp(arr,keywords[i])==0) return success;
+    }
+    return failure;
+}
 
-//     arr[i]='\0';
-//     strcpy(next_char.lexeme,arr);
-
-//     return next_char;  
+char peek_next_chara(FILE *fptr)
+{
+    char *oper = "=+-*/%<>&|!^~";
+    char ch = fgetc(fptr);
     
-// }
+    if(strchr(oper,ch) == NULL)
+    {
+        ungetc(ch,fptr);
+        return -1;
+    }
+    else
+    {
+        return ch;
+    }
+}
+
+status check_if_operator(char ch,FILE *fptr)
+{
+    char *oper = "=+-*/%<>&|!^~";
+    char arr[5];
+    int i=0;
+    // printf("--- %c ---",ch);
+    if(strchr(oper,ch) == NULL)
+    {
+        return failure;
+    }
+
+    do
+    {
+        if(ch == '/' && peek_next_chara(fptr) == '/')
+        {
+            while(fgetc(fptr)!= '\n');
+            arr[i]= '\0';
+            if(i==0) return success;
+            else break;
+        }
+        if(i >= 4)
+        {
+            printf("error not a valid operator \n") ;
+            return error;
+        }
+        arr[i++] = ch;
+        arr[i] = '\0';
+    }
+    while((ch = peek_next_chara(fptr))!=-1);
+
+    for(int j=0; j<MAX_OPERATORS ; j++)
+    {
+        if(strcmp(arr,operators[j]) == 0)
+        {
+            printf("Operator : %s\n",arr);
+            return success;
+        }
+    }
+    printf("eror not a valid operator ");
+    return error;
+}
 
 void lexical(lex_file *lex)
 {
+
+    // printf("dfsfds %s -- ",keywords[0]);
     char ch;
     char arr[MAX_TOKEN_SIZE];
     int count =0; 
     while((ch = fgetc(lex->fptr)) != EOF)
     {
+
+        // if preprocessor directiv edetected skip the whole line
         if(ch == '#')
         {
             while(fgetc(lex->fptr)!='\n');
             continue;
         }
 
+        // if digit is detected and arr is 0 
         if((isdigit(ch)!=0 )&& count == 0)
         {
             arr[count++] = ch;
@@ -131,7 +178,32 @@ void lexical(lex_file *lex)
             {
                 printf("float constant :%s\n",arr);
             }
+            continue;
         }
-        // if(isalpha)
+
+        if(isalnum(ch)!= 0)
+        {
+            if(count == 100)
+            {
+                printf("error : maximumm token size exceeded\n");
+                return; 
+            } 
+            arr[count++] = ch;
+        }
+        else if(count != 0)
+        {
+            arr[count] = '\0';
+            count =0;
+            if(check_if_keyword(arr) == success) printf("keyword : %s\n",arr);
+            else printf("Identifier : %s\n",arr);
+            ungetc(ch,lex->fptr);
+        }
+        else
+        {
+            if(ch ==' ' || ch == '\n') continue; 
+
+            if(check_if_operator(ch,lex->fptr) == success);
+            else printf("special character : %c\n",ch);
+        }
     }
 }
