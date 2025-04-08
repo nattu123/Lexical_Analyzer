@@ -4,6 +4,8 @@ as
 int main() // int main 
 {
     int i = 1443,12;
+    int num1 = 4;
+    char ch = 'p';
     float j = 12.2; 
     
     printf("hi \n");
