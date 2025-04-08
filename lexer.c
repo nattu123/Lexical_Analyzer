@@ -210,18 +210,21 @@ void lexical(lex_file *lex)
             if(ch ==' ' || ch == '\n') continue; 
 
             if(check_if_operator(ch,lex->fptr) == success);
-            else if(ch == '\'') // check if character constant 
+            else if(ch == '\''  || ch =='\"') // check if character constant 
             {
                 do
                 {
                     arr[count++] = ch;
                 }
-                while((ch = fgetc(lex->fptr))!= '\'');
+                while((ch = fgetc(lex->fptr))!= '\'' && ch !='\"');
                 arr[count++] = ch;
                 arr[count] = '\0';
-                printf("character constant %s\n",arr);
+                if(ch=='\'')printf("character constant %s\n",arr);
+                else if(ch=='\"')printf("string literal %s\n",arr);
                 count =0;
             }
+            else printf(" special character : %c\n",ch);
+
         }
     }
 }
