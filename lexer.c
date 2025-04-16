@@ -134,6 +134,13 @@ status check_if_operator(char ch,FILE *fptr)
     return error;
 }
 
+char peek_next(FILE *fptr)
+{
+    char ch = fgetc(fptr);
+    ungetc(ch,fptr);
+    return ch; 
+}
+
 void lexical(lex_file *lex)
 {
 
@@ -143,13 +150,13 @@ void lexical(lex_file *lex)
     while((ch = fgetc(lex->fptr)) != EOF)
     {
 
-        // if preprocessor directiv edetected skip the whole line
+        // if preprocessor directive detected skip the whole line
         if(ch == '#')
         {
             while(fgetc(lex->fptr)!='\n');
             continue;
         }
-
+    
         // if digit is detected and arr is 0 
         if((isdigit(ch)!=0 )&& count == 0)
         {
@@ -157,7 +164,7 @@ void lexical(lex_file *lex)
             int flag = 0;
             while((ch = fgetc(lex->fptr)) != ';')
             {
-                if(ch == ',')
+                if(ch == ',' )
                 {
                     arr[count] = '\0';
                     count = 0;
