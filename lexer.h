@@ -17,12 +17,6 @@ typedef enum {
 } TokenType;
 
 
-typedef struct {
-    char lexeme[MAX_TOKEN_SIZE];
-    TokenType type;
-}Token;
-
-
 
 typedef struct{
     FILE *fptr;
@@ -42,11 +36,11 @@ typedef enum
 status initializeLexer(const char* filename,lex_file *lex);
 // Token getNextToken();
 void lexical(lex_file *lex);
-void categorizeToken(Token* token);
 int isKeyword(const char* str);
 int isOperator(const char* str);
 int isSpecialCharacter(char ch);
 int isConstant(const char* str);
 int isIdentifier(const char* str);
+status isValidIdentifier(const char *str);
 
 #endif
