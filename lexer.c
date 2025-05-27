@@ -3,6 +3,15 @@
 #include <ctype.h>
 #include "lexer.h"
 
+// ANSI color codes
+#define COLOR_RED     "\x1B[31m"
+#define COLOR_GREEN   "\x1B[32m"
+#define COLOR_YELLOW  "\x1B[33m"
+#define COLOR_BLUE    "\x1B[34m"
+#define COLOR_MAGENTA "\x1B[35m"
+#define COLOR_CYAN    "\x1B[36m"
+#define COLOR_RESET   "\x1B[0m"
+
 #define set 1
 #define clear 0
 
@@ -45,7 +54,6 @@ char peek_next(FILE *fptr) {
     return c;
 }
 
-
 // Check if a lexeme is a keyword
 status check_if_keyword(char *arr) {
     for (int i = 0; i < MAX_KEYWORDS; i++) {
@@ -56,24 +64,16 @@ status check_if_keyword(char *arr) {
 }
 
 status isValidIdentifier(const char *str) {
-    // Must start with a letter or underscore
     if (!(isalpha(str[0]) || str[0] == '_'))
         return failure;
-
-    // Rest must be alnum or underscore
     for (int i = 1; str[i] != '\0'; i++) {
         if (!(isalnum(str[i]) || str[i] == '_'))
             return failure;
     }
-
-    // Cannot be a keyword
     if (check_if_keyword((char*)str) == success)
         return failure;
-
     return success;
 }
-
-
 
 int isSpecialCharacter(char ch) {
     return strchr(specialCharacters, ch) != NULL;
@@ -95,10 +95,8 @@ status check_if_operator(char ch, FILE *fptr)
     char oper_chars[] = "=+-*/%<>&|!^~";
     char arr[5] = {0};
     int i = 0;
-
     if (!strchr(oper_chars, ch))
         return failure;
-
     do {
         if (ch == '/' && peek_next_char(fptr) == '/') {
             while (fgetc(fptr) != '\n');
@@ -110,14 +108,13 @@ status check_if_operator(char ch, FILE *fptr)
         }
         arr[i++] = ch;
     } while ((ch = peek_next_char(fptr)) != -1);
-
     for (int j = 0; j < MAX_OPERATORS; j++) {
         if (strcmp(arr, operators[j]) == 0) {
             printf("Operator : %s\n", arr);
             return success;
         }
     }
-    printf("error: not a valid operator\n");
+    printf(COLOR_RED "error: not a valid operator\n" COLOR_RESET);
     return error;
 }
 
@@ -126,6 +123,9 @@ void lexical(lex_file *lex)
     char ch;
     char arr[MAX_TOKEN_SIZE];
     int count;
+    // Bracket stack for balance checking
+    char bracket_stack[1024];
+    int top = -1;
 
     while ((ch = fgetc(lex->fptr)) != EOF) {
         // Skip whitespace
@@ -137,64 +137,67 @@ void lexical(lex_file *lex)
             continue;
         }
 
-    // Numeric constants
-    if (isdigit(ch)) 
-    {
-        count = 0;
-        arr[count++] = ch;
-        char next = peek_next(lex->fptr);
+        // Track brackets inline
+        if (ch == '(' || ch == '{' || ch == '[') {
+            bracket_stack[++top] = ch;
+        } else if (ch == ')' || ch == '}' || ch == ']') {
+            if (top < 0) {
+                printf(COLOR_RED "Unmatched closing bracket: %c\n" COLOR_RESET, ch);
+            } else {
+                char last = bracket_stack[top--];
+                if ((ch == ')' && last != '(') ||
+                    (ch == '}' && last != '{') ||
+                    (ch == ']' && last != '[')) {
+                    printf(COLOR_RED "Bracket mismatch: opened with %c but closed with %c\n" COLOR_RESET, last, ch);
+                }
+            }
+        }
 
-        // If a letter or underscore follows a digit, it's not a valid number —
-        // treat the whole run as an invalid identifier.
-        if (isalpha(next) || next == '_') {
-            while ((ch = fgetc(lex->fptr)) != EOF && (isalnum(ch) || ch == '_')) {
+        // Numeric constants or invalid identifiers
+        if (isdigit(ch)) {
+            count = 0;
+            arr[count++] = ch;
+            char next = peek_next(lex->fptr);
+            if (isalpha(next) || next == '_') {
+                while ((ch = fgetc(lex->fptr)) != EOF && (isalnum(ch) || ch == '_')) {
+                    arr[count++] = ch;
+                }
+                arr[count] = '\0';
+                printf(COLOR_RED "Invalid identifier: %s\n" COLOR_RESET, arr);
+                if (ch != EOF) ungetc(ch, lex->fptr);
+                continue;
+            }
+            int dot_count = 0;
+            while ((ch = fgetc(lex->fptr)) != EOF && (isdigit(ch) || ch == '.')) {
+                if (ch == '.') dot_count++;
                 arr[count++] = ch;
             }
             arr[count] = '\0';
-            printf("Invalid identifier: %s\n", arr);
+            if (dot_count == 0)
+                printf("Integer constant : %s\n", arr);
+            else
+                printf("Float constant   : %s\n", arr);
             if (ch != EOF) ungetc(ch, lex->fptr);
             continue;
         }
 
-        // Otherwise, parse as a numeric constant (int or float)
-        int dot_count = 0;
-        while ((ch = fgetc(lex->fptr)) != EOF && (isdigit(ch) || ch == '.')) {
-            if (ch == '.') dot_count++;
+        // Identifiers and keywords
+        if (isalpha(ch) || ch == '_') {
+            count = 0;
             arr[count++] = ch;
+            while ((ch = fgetc(lex->fptr)) != EOF && (isalnum(ch) || ch == '_')) {
+                arr[count++] = ch;
+            }
+            arr[count] = '\0';
+            if (ch != EOF) ungetc(ch, lex->fptr);
+            if (check_if_keyword(arr) == success)
+                printf("Keyword    : %s\n", arr);
+            else if (isValidIdentifier(arr) == success)
+                printf("Identifier : %s\n", arr);
+            else
+                printf("Invalid identifier: %s\n", arr);
+            continue;
         }
-        arr[count] = '\0';
-
-        if (dot_count == 0)
-            printf("Integer constant : %s\n", arr);
-        else
-            printf("Float constant   : %s\n", arr);
-
-        if (ch != EOF) ungetc(ch, lex->fptr);
-        continue;
-}
-
-            // Identifiers and keywords
-    if (isalpha(ch) || ch == '_') {
-        count = 0;
-        arr[count++] = ch;
-        // read the rest of the token
-        while ((ch = fgetc(lex->fptr)) != EOF && (isalnum(ch) || ch == '_')) {
-            arr[count++] = ch;
-        }
-        arr[count] = '\0';
-        if (ch != EOF) ungetc(ch, lex->fptr);
-
-        if (check_if_keyword(arr) == success) {
-            printf("Keyword    : %s\n", arr);
-        }
-        else if (isValidIdentifier(arr) == success) {
-            printf("Identifier : %s\n", arr);
-        }
-        else {
-            printf("Invalid identifier: %s\n", arr);
-        }
-        continue;
-    }
 
         // Operators
         if (check_if_operator(ch, lex->fptr) == success) {
@@ -224,5 +227,17 @@ void lexical(lex_file *lex)
         } else {
             printf("Unknown token     : %c\n", ch);
         }
+    }
+
+    // Final bracket balance report
+    if (top >= 0) {
+        printf("Unmatched opening bracket(s) remain: ");
+        while (top >= 0) {
+            putchar(bracket_stack[top--]);
+            if (top >= 0) putchar(' ');
+        }
+        putchar('\n');
+    } else {
+        printf("All brackets balanced.\n");
     }
 }

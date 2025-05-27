@@ -8,5 +8,5 @@ int main() // int main
     char ch = 'p';
     float j = 12.2 , 1.2; 
     
-    printf("hi \n");
+    printf("hi \n";
 }
